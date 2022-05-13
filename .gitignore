@@ -4,3 +4,4 @@ chromedriver.exe
 *.txt
 .vscode
 fine-tune-pegasus-paraphraser/
+__pycache__

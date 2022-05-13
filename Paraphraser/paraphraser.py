@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # T5 Finetuning
 # PEGASUS paraphraser
 import torch
@@ -15,7 +16,7 @@ import requests
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import os
 
-paraphraser_model_name = './model/fine-tune-pegasus-paraphraser/'
+paraphraser_model_name = 'E:\\Project\\Passive-Adsenses-Blog\\Paraphraser\\model\\fine-tune-pegasus-paraphraser'
 torch_device = 'cuda' if torch.cuda.is_available() else 'cpu'
 paraphraser_tokenizer = PegasusTokenizer.from_pretrained(paraphraser_model_name,local_files_only=True)
 paraphraser_model = PegasusForConditionalGeneration.from_pretrained(paraphraser_model_name,local_files_only=True).to(torch_device)
@@ -78,13 +79,11 @@ def paraphrased_list_article(corpus):
         if bool(re.match(template_point,sentence)) or sentence.find(":") !=-1:
           new_line += sentence 
         else:
-          print("Sentence :",sentence)
           lst_paraphrase = paraphrase_sentence(sentence)
           result = sorted(lst_paraphrase,key=lambda x: distance(sentence,x),reverse=True)[0]
-          print("Result :",result)
           new_line += result
-      new_paragraph += new_line + "\n"
-    paraphrased_article = paraphrased_article + new_paragraph + "\n\n"
+      new_paragraph += new_line + "<br>"
+    paraphrased_article = paraphrased_article + new_paragraph + "<br><br>"
   return paraphrased_article
 
 if __name__ == '__main__':
