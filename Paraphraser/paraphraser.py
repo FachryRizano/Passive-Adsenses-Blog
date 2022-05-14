@@ -14,7 +14,8 @@ import cloudscraper
 import newspaper
 import requests
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import os
+import os 
+nlp = spacy.load("en_core_web_trf")
 
 paraphraser_model_name = 'E:\\Project\\Passive-Adsenses-Blog\\Paraphraser\\model\\fine-tune-pegasus-paraphraser'
 torch_device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -22,6 +23,7 @@ paraphraser_tokenizer = PegasusTokenizer.from_pretrained(paraphraser_model_name,
 paraphraser_model = PegasusForConditionalGeneration.from_pretrained(paraphraser_model_name,local_files_only=True).to(torch_device)
 # paraphraser_tokenizer.save_pretrained("./model/fine-tune-pegaus-pharaphraser/tokenizer")
 # paraphraser_model.save_pretrained("./model/fine-tune-pegaus-pharaphraser/model")
+
 
 def paraphrase_question(question,num_return_sequences=10,num_beams=40):
    return sorted(filter(lambda x: True if x.endswith('?') else False , paraphrase_sentence(question,num_return_sequences,num_beams)),key=lambda x: distance(x,question), reverse=True)[0]
@@ -65,7 +67,7 @@ def paraphrase_corpus(corpus):
       result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
       new_paragraph += result
 
-def paraphrased_list_article(corpus):
+def paraphrase_list_article(corpus):
   # legalzoom.com
   paraphrased_article = ""
   template_point = r'\s*^[0-9].\s*'
@@ -86,15 +88,65 @@ def paraphrased_list_article(corpus):
     paraphrased_article = paraphrased_article + new_paragraph + "<br><br>"
   return paraphrased_article
 
+def paraphrase_html(html):
+  lst_element = []
+  for element in html.find_all(['p','h1','h2','h3','h4','h5','h6','ul']):
+    # Pass for hyperlink
+    if len(element.find_all('a'))>0:
+      continue
+    try:
+      text = element.text
+      # If it is paragraph
+      if element.name == 'p':
+        paraphrased_text=""
+        doc = nlp(text) 
+        # Split paragraph to sentence
+        for sentence in list(doc.sents):
+            # Empty string or found :
+            if sentence.text =='' or sentence.text.find(":")!=-1:
+              continue
+            print("Sentence: ",sentence.text)
+            lst_paraphrase = paraphrase_sentence(sentence.text)
+            result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
+            print("Result: ",result)
+            paraphrased_text += result
+        element.string.replace_with(paraphrased_text)
+      elif bool(re.match(r'h[2-6]',element.name)):
+        # If element is h1-6
+        print("Sentence: ",text)
+        lst_paraphrase = paraphrase_sentence(text)
+        result = sorted(lst_paraphrase,key=lambda x: distance(text,x),reverse=True)[0]
+        print("Result: ",result)
+        element.string.replace_with(paraphrased_text)
+      lst_element.append(str(element))
+    except Exception as e:
+      # Element in element
+      print(e)
+      print("Element :",str(element))
+      for e in element.find_all():
+        if len(e.text) != 1:
+          lst_paraphrase = paraphrase_sentence(e.text)
+          result = sorted(lst_paraphrase,key=lambda x: distance(e.text,x),reverse=True)[0]
+        else:
+          result = e.text
+        e.string.replace_with(result)
+      lst_element.append(str(element))
+      print("Appended..")
+      # pass
+  return ''.join(lst_element)
+
 if __name__ == '__main__':
   print('GPU Available:',torch.cuda.is_available())
   # Read input
-  data = os.listdir('./input')[0]
+  # data = os.listdir('./input')[0]
+  data = "test_link.txt"
   print("Read Input...")
-  with open(f"./input/{data}",'r') as f:
-    corpus = f.read()
+  url = "https://towardsdatascience.com/is-data-science-still-a-rising-career-in-2021-722281f7074c"
+  status, title, article = get_article(url)
+  # with open(f"./input/{data}",'r') as f:
+    # corpus = f.read()
   print("Paraphrasing Input...")
-  result = paraphrased_list_article(corpus)
+  result = paraphrase_list_article(article.text)
   print("Saving Input...")
   with open(f'./output/{data}',"w+") as f: 
     f.write(result)

@@ -8,12 +8,13 @@ import re
 import cloudscraper
 import newspaper
 import requests
+from bs4 import BeautifulSoup
 
 # Subtitle pertama jadi Main Title dan paragraph pertama sebagai introduction
 
 
-nltk.download('punkt')
-nlp = spacy.load("en_core_web_md")
+# nltk.download('punkt')
+# nlp = spacy.load("en_core_web_md")
 
 def generate_image():
     pass
@@ -21,15 +22,18 @@ def generate_image():
 def get_article(url: str) -> tuple:
     try:
         # print(f"Getting {url}")
-        scraper = cloudscraper.create_scraper()
-        html = scraper.get(url).content
+        scraper = cloudscraper.create_scraper(delay=10, browser='chrome')
+        responses = scraper.get(url)
+        html = responses.content
+        status = responses.status_code
         article = newspaper.Article(url=" ")
         article.set_html(html)
         article.parse()
         article.nlp()
-        return ( article.title, nlp(article.text))
+        return ( status, article.title, nlp(article.text))
     except Exception as error:
-        return ("None",nlp("None"))
+        print(error)
+        return ("Error","None",nlp("None"))
 
 # SERP API
 def search_links(keyword,api="8b72feb161cb7c785e7089b3c46a6367f0075f909e61c6939cdea47054dc28e9"):
@@ -109,12 +113,24 @@ def filter_text(corpus,lst_kw):
   clean_duplicate = {text[:-1] for text in corpus.split("#")}.difference(lst_kw)
   return ''.join(["##" + sub + "\n" for sub in clean_duplicate if sub != ''])
 
+def get_article_html(url):
+    scraper = cloudscraper.create_scraper()
+    html = scraper.get(url).content
+    soup = BeautifulSoup(html, 'html.parser')
+    try:
+        res = soup.find_all("article")[0]
+    except IndexError:
+        res = f"{url} can't be scraped"
+    return res
+    
 
 if __name__ == '__main__':
     # Sample
-    # https://www.indiatoday.in/education-today/jobs-and-careers/story/career-as-a-data-scientist-scope-skills-needed-job-profiles-and-other-details-1781529-2021-03-31
+    # url = "https://www.indiatoday.in/education-today/jobs-and-careers/story/career-as-a-data-scientist-scope-skills-needed-job-profiles-and-other-details-1781529-2021-03-31"
     url = "https://towardsdatascience.com/is-data-science-still-a-rising-career-in-2021-722281f7074c"
-    scraper = cloudscraper.create_scraper()
-    html = scraper.get(url).content
+    # scraper = cloudscraper.create_scraper()
+    # html = scraper.get(url).content
+    # print(html)
+    print(get_article(url))
     # print(text_from_html(html))
     

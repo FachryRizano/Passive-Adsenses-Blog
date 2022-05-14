@@ -8,9 +8,11 @@
     <title>Fyodor Paraphraser</title>
 </head>
 <body>
-    <form action ="{{ url_for('upload_source') }}" method = "POST" enctype = "multipart/form-data">
-        <input type = "file" name = "file" />
-        <input class= "file-upload-btn" type = "submit"/>
+    <form action ="{{ url_for('paraphrased_by_link') }}" method = "POST" enctype = "multipart/form-data">
+        <label for="article_link">Paraphrase Link:</label>
+        <input type="text" id="article_link" name="article_link"><br><br>
+        <input type="submit" value="Submit">
     </form>
+    {{paraphrased_result | safe}}
 </body>
 </html>
