@@ -55,7 +55,7 @@ def paraphrase_article(corpus):
 def paraphrase_sentence(input_text,num_return_sequences=10,num_beams=40):
   batch = paraphraser_tokenizer([input_text],truncation=True,padding='longest',max_length=60, return_tensors="pt").to(torch_device)
   translated = paraphraser_model.generate(**batch,max_length=60,num_beams=num_beams, num_return_sequences=num_return_sequences, temperature=1.5)
-  tgt_text = paraphraser_tokenizer.batch_decode(translated, skip_special_tokens=True)
+  tgt_text = paraphraser_tokenizer.batch_decode(translated, skip_special_tokens=False)
   return tgt_text
 
 def paraphrase_corpus(corpus):
@@ -89,6 +89,7 @@ def paraphrase_list_article(corpus):
   return paraphrased_article
 
 def paraphrase_html(html):
+  # Towards Data Science
   lst_element = []
   for element in html.find_all(['p','h1','h2','h3','h4','h5','h6','ul']):
     # Pass for hyperlink
@@ -105,24 +106,41 @@ def paraphrase_html(html):
             # Empty string or found :
             if sentence.text =='' or sentence.text.find(":")!=-1:
               continue
-            print("Sentence: ",sentence.text)
+            # print("Sentence: ",sentence.text)
             lst_paraphrase = paraphrase_sentence(sentence.text)
             result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
-            print("Result: ",result)
+            # Outlier
+            if result.startswith('YouTrademarkiaTrademarkiaTrademarkia'):
+              result = sentence.text
+            # print("Result: ",result)
             paraphrased_text += result
         element.string.replace_with(paraphrased_text)
+      # element is h1-6
       elif bool(re.match(r'h[2-6]',element.name)):
-        # If element is h1-6
-        print("Sentence: ",text)
+        # print("Sentence: ",text)
         lst_paraphrase = paraphrase_sentence(text)
         result = sorted(lst_paraphrase,key=lambda x: distance(text,x),reverse=True)[0]
-        print("Result: ",result)
+        # print("Result: ",result)
         element.string.replace_with(paraphrased_text)
+      # Element is UL
+      elif element.name == 'ul':
+        print("UL")
+        for e in element.find_all():
+          if len(e.text.split()) != 1:
+            lst_paraphrase = paraphrase_sentence(e.text)
+            result = sorted(lst_paraphrase,key=lambda x: distance(e.text,x),reverse=True)[0]
+          else:
+            result = e.text
+          e.string.replace_with(result)
       lst_element.append(str(element))
     except Exception as e:
       # Element in element
       print(e)
       print("Element :",str(element))
+      # print("Str")
+
+      ## Paraphrase All element in element
+      # new_element = []
       for e in element.find_all():
         if len(e.text) != 1:
           lst_paraphrase = paraphrase_sentence(e.text)
@@ -130,8 +148,27 @@ def paraphrase_html(html):
         else:
           result = e.text
         e.string.replace_with(result)
+        # new_element.append(e)
+      ## Paraphrase string in element
+      text = element.text
+      paraphrased_text=""
+      doc = nlp(text) 
+      # Split paragraph to sentence
+      for sentence in list(doc.sents):
+          # Empty string or found :
+          if sentence.text =='' or sentence.text.find(":")!=-1:
+            continue
+          print("Sentence: ",sentence.text)
+          lst_paraphrase = paraphrase_sentence(sentence.text)
+          result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
+          # Outlier
+          if result.startswith('YouTrademarkiaTrademarkiaTrademarkia'):
+            result = sentence.text
+          print("Result: ",result)
+          paraphrased_text += result
+      element.replace(element.text,paraphrased_text)
+
       lst_element.append(str(element))
-      print("Appended..")
       # pass
   return ''.join(lst_element)
 
