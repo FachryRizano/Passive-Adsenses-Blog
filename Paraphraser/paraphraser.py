@@ -55,7 +55,7 @@ def paraphrase_article(corpus):
 def paraphrase_sentence(input_text,num_return_sequences=10,num_beams=40):
   batch = paraphraser_tokenizer([input_text],truncation=True,padding='longest',max_length=60, return_tensors="pt").to(torch_device)
   translated = paraphraser_model.generate(**batch,max_length=60,num_beams=num_beams, num_return_sequences=num_return_sequences, temperature=1.5)
-  tgt_text = paraphraser_tokenizer.batch_decode(translated, skip_special_tokens=False)
+  tgt_text = paraphraser_tokenizer.batch_decode(translated, skip_special_tokens=True)
   return tgt_text
 
 def paraphrase_corpus(corpus):
@@ -91,10 +91,10 @@ def paraphrase_list_article(corpus):
 def paraphrase_html(html):
   # Towards Data Science
   lst_element = []
-  for element in html.find_all(['p','h1','h2','h3','h4','h5','h6','ul']):
+  for element in html.find_all(['p','h1','h2','h3','h4','h5','h6','ul','ol']):
     # Pass for hyperlink
-    if len(element.find_all('a'))>0:
-      continue
+    # if len(element.find_all('a'))>0:
+    #   continue
     try:
       text = element.text
       # If it is paragraph
@@ -111,6 +111,7 @@ def paraphrase_html(html):
             result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
             # Outlier
             if result.find!=-1('TrademarkiaTrademarkiaTrademarkia'):
+              print(element.name)
               result = sentence.text
             # print("Result: ",result)
             paraphrased_text += result
@@ -124,7 +125,6 @@ def paraphrase_html(html):
         element.string.replace_with(paraphrased_text)
       # Element is UL
       elif element.name == 'ul':
-        print("UL")
         for e in element.find_all():
           if len(e.text.split()) != 1:
             lst_paraphrase = paraphrase_sentence(e.text)
@@ -132,6 +132,40 @@ def paraphrase_html(html):
           else:
             result = e.text
           e.string.replace_with(result)
+      elif element.name =='ol':
+        x = element
+        for element in x.find_all():
+          current_type = element.name
+          text = element.text
+
+          # Modify Element
+          modif_dict = {e.text: str(e) for e in element.find_all()}
+
+          # Paraphrase string in e
+          paraphrased_text=""
+          doc = nlp(text) 
+          # Split paragraph to sentence
+          for sentence in list(doc.sents):
+              
+              # Empty string or found :
+              if sentence.text =='' or sentence.text.find(":")!=-1:
+                continue
+              
+              # print("Sentence: ",sentence.text)
+              lst_paraphrase = paraphrase_sentence(sentence.text)
+              result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
+              
+              # Outlier
+              if result.find('TrademarkiaTrademarkiaTrademarkia')!=-1 or sentence.text.find("“")!=-1 or sentence.text.find("”")!=-1:
+                result = sentence.text
+              # print("Result:",result)
+              paraphrased_text += result
+          new_element = f"<{current_type}>" + paraphrased_text + f"</{current_type}>"
+          
+          # Modify modified text to modified html
+          for text,el in modif_dict.items():
+            new_element = new_element.replace(text,el)
+          element = new_element
       lst_element.append(str(element))
     except Exception as e:
       current_type = element.name
@@ -143,26 +177,28 @@ def paraphrase_html(html):
       # Paraphrase string in element
       paraphrased_text=""
       doc = nlp(text) 
-      
       # Split paragraph to sentence
       for sentence in list(doc.sents):
           
           # Empty string or found :
           if sentence.text =='' or sentence.text.find(":")!=-1:
             continue
-          print("Sentence: ",sentence.text)
+          
+          # print("Sentence: ",sentence.text)
           lst_paraphrase = paraphrase_sentence(sentence.text)
           result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
           
           # Outlier
-          if result.find!=-1('TrademarkiaTrademarkiaTrademarkia'):
+          if result.find('TrademarkiaTrademarkiaTrademarkia')!=-1 or sentence.text.find("“")!=-1 or sentence.text.find("”")!=-1:
             result = sentence.text
+          # print("Result:",result)
           paraphrased_text += result
       new_element = f"<{current_type}>" + paraphrased_text + f"</{current_type}>"
       
       # Modify modified text to modified html
       for text,el in modif_dict.items():
         new_element = new_element.replace(text,el)
+      # print(new_element)
       lst_element.append(new_element)
   return ''.join(lst_element)
 
