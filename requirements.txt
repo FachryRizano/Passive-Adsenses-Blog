@@ -1,4 +1,3 @@
-Article==0.0.0
 beautifulsoup4==4.11.1
 blis==0.7.7
 catalogue==2.0.7
@@ -9,7 +8,6 @@ cloudscraper==1.2.60
 colorama==0.4.4
 cssselect==1.1.0
 cymem==2.0.6
-en-core-web-trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.3.0/en_core_web_trf-3.3.0-py3-none-any.whl
 feedfinder2==0.0.4
 feedparser==6.0.8
 filelock==3.6.0
@@ -64,9 +62,9 @@ thinc==8.0.15
 tinysegmenter==0.3
 tldextract==3.3.0
 tokenizers==0.12.1
-torch==1.11.0+cu113
-torchaudio==0.11.0+cu113
-torchvision==0.12.0+cu113
+torch==1.11.0
+torchaudio==0.11.0
+torchvision==0.12.0
 tqdm==4.64.0
 transformers==4.17.0
 typer==0.4.1

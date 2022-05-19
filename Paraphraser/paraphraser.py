@@ -19,12 +19,14 @@ from collections import Counter
 
 nlp = spacy.load("en_core_web_trf")
 
-paraphraser_model_name = 'E:\\Project\\Passive-Adsenses-Blog\\Paraphraser\\model\\fine-tune-pegasus-paraphraser'
+# paraphraser_model_name = 'E:\\Project\\Passive-Adsenses-Blog\\Paraphraser\\model\\fine-tune-pegasus-paraphraser'
+paraphraser_model_name = 'tuner007/pegasus_paraphrase'
 torch_device = 'cuda' if torch.cuda.is_available() else 'cpu'
-paraphraser_tokenizer = PegasusTokenizer.from_pretrained(paraphraser_model_name,local_files_only=True)
-paraphraser_model = PegasusForConditionalGeneration.from_pretrained(paraphraser_model_name,local_files_only=True).to(torch_device)
-# paraphraser_tokenizer.save_pretrained("./model/fine-tune-pegaus-pharaphraser/tokenizer")
-# paraphraser_model.save_pretrained("./model/fine-tune-pegaus-pharaphraser/model")
+paraphraser_tokenizer = PegasusTokenizer.from_pretrained(paraphraser_model_name)
+paraphraser_model = PegasusForConditionalGeneration.from_pretrained(paraphraser_model_name).to(torch_device)
+# paraphraser_model = PegasusForConditionalGeneration.from_pretrained(paraphraser_model_name,local_files_only=True).to(torch_device)
+paraphraser_tokenizer.save_pretrained("./model/fine-tune-pegaus-pharaphraser")
+paraphraser_model.save_pretrained("./model/fine-tune-pegaus-pharaphraser")
 
 
 def paraphrase_question(question,num_return_sequences=10,num_beams=40):
