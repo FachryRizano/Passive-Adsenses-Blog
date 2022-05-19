@@ -15,6 +15,8 @@ import newspaper
 import requests
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import os 
+from collections import Counter
+
 nlp = spacy.load("en_core_web_trf")
 
 paraphraser_model_name = 'E:\\Project\\Passive-Adsenses-Blog\\Paraphraser\\model\\fine-tune-pegasus-paraphraser'
@@ -157,12 +159,17 @@ def paraphrase_html(html):
               lst_paraphrase = paraphrase_sentence(sentence.text)
               result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
               
+              # Counter result
+              result_words = Counter(result.split())
+              word_repeat = [count for count in result_words.values() if count > 5]
+
               # Outlier
               if result.find('TrademarkiaTrademarkiaTrademarkia')!=-1 or\
                 sentence.text.find("“")!=-1 or \
                 sentence.text.find("”")!=-1 or\
                 sentence.text.replace(".","") in modif_dict.keys() or\
-                sentence.text in modif_dict.keys():
+                sentence.text in modif_dict.keys() or\
+                len(word_repeat) > 3:
                 result = sentence.text
               # print("Result:",result)
               paraphrased_text += result
@@ -194,11 +201,14 @@ def paraphrase_html(html):
           print("Sentence: ",sentence.text)
           lst_paraphrase = paraphrase_sentence(sentence.text)
           result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
-          
+          # Counter result
+          result_words = Counter(result.split())
+          word_repeat = [count for count in result_words.values() if count > 5]
           # Outlier
           if result.find('TrademarkiaTrademarkiaTrademarkia')!=-1 or \
             sentence.text.find("“")!=-1 or \
-            sentence.text.find("”")!=-1:
+            sentence.text.find("”")!=-1 or \
+            len(word_repeat) > 3:
             result = sentence.text
           print("Result:",result)
           paraphrased_text += result
