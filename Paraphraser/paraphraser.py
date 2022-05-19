@@ -133,17 +133,19 @@ def paraphrase_html(html):
             result = e.text
           e.string.replace_with(result)
       elif element.name =='ol':
-        x = element
-        for element in x.find_all():
-          current_type = element.name
-          text = element.text
+        # print(str(element))
+        lst_new_element = []
+        for e in element.find_all('li'):
+          current_type = e.name
+          text = e.text
 
           # Modify Element
-          modif_dict = {e.text: str(e) for e in element.find_all()}
-
-          # Paraphrase string in e
+          modif_dict = {c.text: str(c) for c in e.find_all()}
+          print(modif_dict.keys())
+          # Paraphrase string in element
           paraphrased_text=""
           doc = nlp(text) 
+
           # Split paragraph to sentence
           for sentence in list(doc.sents):
               
@@ -156,7 +158,11 @@ def paraphrase_html(html):
               result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
               
               # Outlier
-              if result.find('TrademarkiaTrademarkiaTrademarkia')!=-1 or sentence.text.find("“")!=-1 or sentence.text.find("”")!=-1:
+              if result.find('TrademarkiaTrademarkiaTrademarkia')!=-1 or\
+                sentence.text.find("“")!=-1 or \
+                sentence.text.find("”")!=-1 or\
+                sentence.text.replace(".","") in modif_dict.keys() or\
+                sentence.text in modif_dict.keys():
                 result = sentence.text
               # print("Result:",result)
               paraphrased_text += result
@@ -165,7 +171,8 @@ def paraphrase_html(html):
           # Modify modified text to modified html
           for text,el in modif_dict.items():
             new_element = new_element.replace(text,el)
-          element = new_element
+          lst_new_element.append(new_element)
+        element = '<br>'.join(lst_new_element)
       lst_element.append(str(element))
     except Exception as e:
       current_type = element.name
@@ -184,14 +191,16 @@ def paraphrase_html(html):
           if sentence.text =='' or sentence.text.find(":")!=-1:
             continue
           
-          # print("Sentence: ",sentence.text)
+          print("Sentence: ",sentence.text)
           lst_paraphrase = paraphrase_sentence(sentence.text)
           result = sorted(lst_paraphrase,key=lambda x: distance(sentence.text,x),reverse=True)[0]
           
           # Outlier
-          if result.find('TrademarkiaTrademarkiaTrademarkia')!=-1 or sentence.text.find("“")!=-1 or sentence.text.find("”")!=-1:
+          if result.find('TrademarkiaTrademarkiaTrademarkia')!=-1 or \
+            sentence.text.find("“")!=-1 or \
+            sentence.text.find("”")!=-1:
             result = sentence.text
-          # print("Result:",result)
+          print("Result:",result)
           paraphrased_text += result
       new_element = f"<{current_type}>" + paraphrased_text + f"</{current_type}>"
       
