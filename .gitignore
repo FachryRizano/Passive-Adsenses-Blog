@@ -6,3 +6,7 @@ chromedriver.exe
 fine-tune-pegasus-paraphraser/
 gpt2-large/
 __pycache__
+*.dll
+*.mp3
+*.wav
+*.exe
